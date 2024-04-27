@@ -82,3 +82,20 @@ jobs:
         run: |
           pytest
           
+
+  build-image:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    needs: tagging
+    steps:
+    - uses: actions/checkout@v4
+    - uses: mr-smithers-excellent/docker-build-push@v6
+      name: Build and push Docker image
+      env:
+          tag: ${{ needs.tagging.outputs.nextver }}
+      with:
+        image: $USERNAME/$APP_NAME
+        tags: $tag
+        registry: docker.io
+        username: $USERNAME
+        password: ${{ secrets.DOCKER_PASSWORD }}
