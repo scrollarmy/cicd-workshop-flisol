@@ -6,3 +6,5 @@ App de encuestas creada en python con Flask
 
 # ejecutar
 `python3 app.py`
+
+Este cambio representa una feature nueva
