@@ -1,0 +1,54 @@
+name: pipelinePython
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  APP_NAME: surveyapp
+
+permissions:
+  contents: read
+
+
+jobs:
+  tagging:
+    runs-on: ubuntu-latest
+    outputs:
+      nextver: ${{ steps.calculate_version.outputs.next_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get latest release version
+        id: get_release
+        run: |
+          set -x
+          echo "------------------------"
+          release_version=$(curl -s "https://api.github.com/repos/${GITHUB_REPOSITORY}/tags" | python -c "import sys, json; print(json.load(sys.stdin)[0].get('name', 'v0.0.0'))")
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+          echo "::debug::Release version seteado $release_version"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calculate next version
+        id: calculate_version
+        env:
+          release_version: ${{ steps.get_release.outputs.release_version }}
+          branch_name: ${{ github.ref }}
+        run: |
+          set -x
+          current_version=$release_version
+          echo "::debug:: Branch name $branch_name"
+          if [[ "$branch_name" == "refs/heads/main" ]]; then
+            next_version=$(echo "$current_version" | sed 's/^v//' | awk -F. '{$1 = $1 + 1;} 1' | sed 's/ /./g')
+          elif [[ "$branch_name" == "refs/heads/develop" ]]; then
+            next_version=$(echo "$current_version" | sed 's/^v//' | awk -F. '{$2 = $2 + 1;} 1' | sed 's/ /./g')
+          fi
+          echo "::debug::Next version $next_version"
+          echo "next_version=$next_version" >> "$GITHUB_OUTPUT"
+          
