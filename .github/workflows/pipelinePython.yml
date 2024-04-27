@@ -100,3 +100,22 @@ jobs:
         registry: docker.io
         username: $USERNAME
         password: ${{ secrets.DOCKER_PASSWORD }}
+
+  repo-tag:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    needs: [tagging, build-image]
+    steps:
+    - uses: actions/github-script@v7.0.1
+      name: Tagging repo
+      env:
+        tag: ${{ needs.tagging.outputs.nextver }}
+      with:
+        script: |
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: 'refs/tags/${{ needs.tagging.outputs.nextver }}',              
+            sha: context.sha
+          })
+     
