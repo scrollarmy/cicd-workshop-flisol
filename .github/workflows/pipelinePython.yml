@@ -12,6 +12,7 @@ on:
 
 env:
   APP_NAME: surveyapp
+  USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
 permissions:
   contents: read
